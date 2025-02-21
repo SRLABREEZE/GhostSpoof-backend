@@ -1,4 +1,6 @@
-require('dotenv').config();
+app.get("/", (req, res) => {
+    res.send("🔥 GhostSpoof Backend is Running!");
+});require('dotenv').config();
 
 const express = require('express');
 const app = express();
