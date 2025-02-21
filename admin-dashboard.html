@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - GhostSpoof</title>
+    
+    <!-- Load Firebase Configuration -->
+    <script type="module" src="firebase-config.js"></script>
+    
+    <style>
+        /* 🔹 Styling for the Admin Dashboard */
+        body {
+            background-color: #000;
+            color: #0ff;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+            padding: 20px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            margin: 10px;
+            font-size: 18px;
+            color: #000;
+            background-color: #0ff;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .card {
+            background: #111;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 1px solid #0ff;
+        }
+        .logo {
+            width: 150px;
+            height: auto;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 🔹 Logo and Welcome Message -->
+    <img src="ghostspoof_logo.png" alt="GhostSpoof Logo" class="logo">
+    <h1>Welcome to the Admin Dashboard</h1>
+
+    <div class="container">
+        <!-- 🔹 Balance Section -->
+        <div class="card">
+            <h2>Your Balance: <span id="balance">Loading...</span></h2>
+            <a href="buy_credits.html" class="btn">Buy More Credits</a>
+        </div>
+
+        <!-- 🔹 Call History Section -->
+        <div class="card">
+            <h2>Call History</h2>
+            <p id="call-history">Loading...</p>
+        </div>
+
+        <!-- 🔹 Account Settings -->
+        <div class="card">
+            <h2>Account Settings</h2>
+            <a href="settings.html" class="btn">Manage Account</a>
+        </div>
+
+        <!-- 🔹 Logout Button -->
+        <a href="#" class="btn" onclick="logoutAdmin()">Logout</a>
+    </div>
+
+    <!-- 🔹 Firebase & Admin Logic -->
+    <script type="module">
+        import { auth, db, checkAdmin, logoutAdmin } from "./firebase-config.js";
+        import { getDoc, doc, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+
+        // 🔹 Check if user is authenticated and admin
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = "login.html"; // Redirect if not logged in
+                return;
+            }
+            await checkAdmin(user); // Ensure the user is an admin
+
+            // 🔹 Fetch and Display Admin's Balance
+            try {
+                const userRef = doc(db, "users", user.uid);
+                const userSnap = await getDoc(userRef);
+                document.getElementById("balance").innerText = userSnap.exists() ? `$${userSnap.data().credits}` : "$0.00";
+            } catch (error) {
+                console.error("🔥 Error Fetching Balance:", error);
+                document.getElementById("balance").innerText = "Error loading balance";
+            }
+
+            // 🔹 Fetch and Display Call History
+            try {
+                const callsRef = collection(db, "calls");
+                const callSnap = await getDocs(callsRef);
+                let historyHtml = "";
+                callSnap.forEach((doc) => {
+                    historyHtml += `<p>${doc.data().caller} → ${doc.data().receiver} at ${doc.data().timestamp}</p>`;
+                });
+                document.getElementById("call-history").innerHTML = historyHtml || "No recent calls.";
+            } catch (error) {
+                console.error("🔥 Error Fetching Call History:", error);
+                document.getElementById("call-history").innerText = "Error loading call history";
+            }
+        });
+    </script>
+
+</body>
+</html>
