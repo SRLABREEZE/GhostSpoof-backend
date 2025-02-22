@@ -1,69 +1,77 @@
-require('dotenv').config();
-const express = require('express');
-const { UA } = require('sip.js'); // ✅ Correct import for SIP.js
+import { UserAgent, UserAgentOptions, Invitation, Registerer, Inviter, Message, SessionState } from 'sip.js';
+import express from 'express';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ✅ Middleware
 app.use(express.json());
 
-// ✅ Load SIP Credentials from `.env`
+// ✅ **SIP Credentials from `.env`**
 const SIP_USERNAME = process.env.SIP_USERNAME;
 const SIP_PASSWORD = process.env.SIP_PASSWORD;
 const SIP_DOMAIN = process.env.SIP_DOMAIN;
 
-// ✅ Check if SIP credentials exist
-if (!SIP_USERNAME || !SIP_PASSWORD || !SIP_DOMAIN) {
-    console.error("❌ Missing SIP credentials in .env file!");
-    process.exit(1);
-}
-
-// ✅ Create SIP User Agent for Outbound Calls
-const userAgent = new UA({
+// ✅ **Create SIP UserAgent**
+const userAgentOptions = {
     uri: `sip:${SIP_USERNAME}@${SIP_DOMAIN}`,
     transportOptions: {
-        wsServers: ["wss://sip.didlogic.net:7443"], // ✅ Secure WebSocket Connection
+        server: "wss://sip.didlogic.net:7443", // Secure WebSocket connection
     },
-    authorizationUser: SIP_USERNAME,
-    password: SIP_PASSWORD,
-    sessionDescriptionHandlerFactoryOptions: {
-        peerConnectionOptions: {
-            rtcConfiguration: {
-                iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
-            }
-        }
-    }
+    authorizationUsername: SIP_USERNAME,
+    authorizationPassword: SIP_PASSWORD,
+};
+
+const userAgent = new UserAgent(userAgentOptions);
+
+// ✅ **Register the SIP UserAgent**
+const registerer = new Registerer(userAgent);
+registerer.register().then(() => {
+    console.log("📞 SIP Registered with DIDLogic!");
+}).catch((error) => {
+    console.error("❌ SIP Registration Failed:", error);
 });
 
-// ✅ API Route: Initiate a Spoofed Outbound Call
+// ✅ **API Route to Initiate Outbound Calls**
 app.post("/api/spoof", async (req, res) => {
+    const { targetNumber, spoofedCallerID } = req.body;
+
+    if (!targetNumber || !spoofedCallerID) {
+        return res.status(400).json({ error: "Missing required parameters: targetNumber, spoofedCallerID" });
+    }
+
     try {
-        const { targetNumber, spoofedCallerID } = req.body;
+        // ✅ **Create an Outbound SIP Call**
+        const inviter = new Inviter(userAgent, `sip:${targetNumber}@${SIP_DOMAIN}`);
+        
+        inviter.stateChange.addListener((state) => {
+            console.log(`📞 Call State Changed: ${state}`);
 
-        if (!targetNumber || !spoofedCallerID) {
-            return res.status(400).json({ error: "❌ Missing required fields: targetNumber & spoofedCallerID" });
-        }
-
-        console.log(`🚀 Initiating spoofed call from ${spoofedCallerID} to ${targetNumber}`);
-
-        const session = userAgent.invite(`sip:${targetNumber}@${SIP_DOMAIN}`, {
-            fromUri: `sip:${spoofedCallerID}@${SIP_DOMAIN}`,
+            if (state === SessionState.Established) {
+                console.log(`✅ Call Connected to ${targetNumber}`);
+            }
+            if (state === SessionState.Terminated) {
+                console.log(`❌ Call Ended`);
+            }
         });
 
-        res.json({ message: `📞 Spoofed call from ${spoofedCallerID} to ${targetNumber} initiated!` });
+        await inviter.invite();
+        res.json({ message: `📞 Calling ${targetNumber} with Spoofed Caller ID ${spoofedCallerID}` });
+
     } catch (error) {
-        console.error("❌ SIP Call Error:", error);
-        res.status(500).json({ error: "❌ Failed to initiate spoofed call", details: error.toString() });
+        console.error("❌ Outbound Call Failed:", error);
+        res.status(500).json({ error: "Failed to make the call" });
     }
 });
 
-// ✅ API Route: Check if Backend is Running
-app.get("/", (req, res) => {
+// ✅ **Health Check Route**
+app.get("/health", (req, res) => {
     res.send("🔥 GhostSpoof Backend is Running!");
 });
 
-// ✅ Start Server
+// ✅ **Start Express Server**
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
 });

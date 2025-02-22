@@ -1,18 +1,26 @@
 {
   "name": "ghostspoof-backend",
   "version": "1.0.0",
-  "description": "Backend for GhostSpoof",
+  "description": "GhostSpoof backend for SIP call spoofing",
   "main": "server.js",
+  "type": "module",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
+    "dotenv": "^16.0.3",
     "express": "^4.18.2",
-    "jsonwebtoken": "^9.0.0",
-    "mongoose": "^7.0.0",
     "sip.js": "^0.21.2"
-  }
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "SIP",
+    "call-spoofing",
+    "VoIP",
+    "DIDLogic"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
 }
