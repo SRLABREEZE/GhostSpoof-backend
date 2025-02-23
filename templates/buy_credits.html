@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buy More Credits - GhostSpoof</title>
+    <style>
+        body { background-color: black; color: white; text-align: center; font-family: Arial; }
+        .container { background-color: #121212; padding: 20px; width: 300px; margin: auto; border-radius: 10px; }
+        .cta-button { background-color: cyan; padding: 10px; font-size: 16px; border: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+    <h1>💰 Buy More Credits</h1>
+    <div class="container">
+        <h2>Select a Credit Package</h2>
+        <form action="/create-checkout-session" method="POST">
+            <select name="credits">
+                <option value="10">$5 - 60 Minutes</option>
+                <option value="30">$12 - 180 Minutes</option>
+                <option value="50">$20 - 300 Minutes</option>
+                <option value="100">$35 - 600 Minutes</option>
+                <option value="500">$80 - 3,000 Minutes</option>
+            </select>
+            <br><br>
+            <button class="cta-button" type="submit">Buy Now</button>
+        </form>
+    </div>
+
+</body>
+</html>
