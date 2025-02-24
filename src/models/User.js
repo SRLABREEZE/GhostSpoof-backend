@@ -2,10 +2,10 @@ const mongoose = require('mongoose');
 
 const UserSchema = new mongoose.Schema({
     username: { type: String, required: true },
-    email: { type: String, unique: true, required: true },
+    email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    availableMinutes: { type: Number, default: 5 },  // ✅ 5 Free Minutes
-    referrals: { type: Number, default: 0 }  // ✅ Track referrals
+    callMinutes: { type: Number, default: 0 }, // Call balance
+    referralCode: { type: String, unique: true }
 });
 
 module.exports = mongoose.model('User', UserSchema);
