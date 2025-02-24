@@ -1,27 +1,15 @@
-const express = require("express");
-const cors = require("cors");
-const dotenv = require("dotenv");
-
-// Load environment variables
-dotenv.config();
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const mongoose = require('./src/config/db');
 
 const app = express();
-
-// Middleware
 app.use(express.json());
 app.use(cors());
 
-// Import Routes
-const authRoutes = require("./routes/authRoutes");
+app.use('/api/auth', require('./src/routes/authRoutes'));
+app.use('/api/user', require('./src/routes/userRoutes'));
+app.use('/api/calls', require('./src/routes/callRoutes'));
 
-// Use Routes
-app.use("/api/auth", authRoutes);
-
-// Default Route
-app.get("/", (req, res) => {
-    res.send("GhostSpoof Backend is Running!");
-});
-
-// Server Listen
-const PORT = process.env.PORT || 8081;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
